@@ -39,7 +39,7 @@ input:focus,select:focus{outline:2px solid rgba(197,161,91,.45);border-color:var
 .cards{display:flex;flex-direction:column;gap:9px;padding:10px}.card{background:#fff;border:1px solid #e0e3e8;border-radius:11px;padding:12px;display:flex;flex-direction:column;gap:6px;box-shadow:0 2px 8px rgba(26,31,38,.035)}
 .card.bpm{background:linear-gradient(135deg,#fffaf0,#fff4d9);border:1.5px solid var(--bpm-border);box-shadow:0 3px 10px rgba(166,124,45,.12)}
 .card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.badge{display:inline-block;align-self:flex-start;background:#eef0f3;color:#343b46;border-radius:5px;padding:5px 8px;font-size:11px;font-weight:900;letter-spacing:.2px}.card.bpm .badge{background:var(--navy);color:#fff}.bpm-label{font-size:9px;font-weight:900;letter-spacing:.8px;color:#866425;white-space:nowrap}.card h2{font-size:15px;margin:0;line-height:1.25;color:#1e2732}.address{font-size:13px;line-height:1.4;color:#444b55}.coords{font-size:10px;color:#8a8f98;word-break:break-all}.actions{display:flex;gap:7px;margin-top:5px}.button{border:0;border-radius:8px;padding:11px 11px;font-size:12px;font-weight:900;cursor:pointer;text-decoration:none;text-align:center;letter-spacing:.1px}.map{background:linear-gradient(135deg,#171b22,#303640);color:#fff;flex:1;border:1px solid #0c0e12}.card.bpm .map{background:linear-gradient(135deg,#9a742e,#c5a15b);color:#17191d;border-color:#a9823e}.copy{background:#ebecef;color:#343b46}.empty{padding:25px;text-align:center;color:var(--muted);font-size:13px}
-@media(min-width:700px){main{padding:18px}.controls{grid-template-columns:1fr}.cards{gap:10px}}
+@media(min-width:700px){main{padding:18px}.controls{grid-template-columns:1.4fr 1fr}.cards{gap:10px}}
 @media(max-width:380px){.header-title{font-size:20px}.insignia{width:66px;height:76px}.header-sub{font-size:10px;letter-spacing:1px}.actions{gap:5px}.button{padding:10px 8px;font-size:11px}}
 </style>
 </head>
@@ -58,7 +58,7 @@ input:focus,select:focus{outline:2px solid rgba(197,161,91,.45);border-color:var
 <main>
   <div class="controls">
     <select id="bpmFilter" aria-label="Selecionar unidade ou fração">
-      <option value="">Todas as unidades / frações</option>
+      <option value="">Todas as unidades e frações</option>
     </select>
   </div>
   <div class="summary" id="summary"></div>
@@ -74,10 +74,9 @@ const bpmFilter = document.getElementById('bpmFilter');
 const cards = document.getElementById('cards');
 const summary = document.getElementById('summary');
 
-const bpmNames = [...new Set(records.map(r => r.ueop))]
-  .sort((a,b) => a.localeCompare(b,'pt-BR'));
+const unitNames = [...new Set(records.map(r => r.ueop))];
 
-bpmNames.forEach(name => {
+unitNames.forEach(name => {
   const option = document.createElement('option');
   option.value = name;
   option.textContent = name;
@@ -98,9 +97,9 @@ function escapeHtml(value) {
 function render() {
   const selectedBpm = bpmFilter.value;
 
-  const filtered = records.filter(r =>
-    !selectedBpm || r.ueop === selectedBpm
-  );
+  const filtered = records.filter(r => {
+    return !selectedBpm || r.ueop === selectedBpm;
+  });
 
   summary.textContent = filtered.length + ' registro(s) exibido(s) de ' + records.length;
 
