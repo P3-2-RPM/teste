@@ -52,6 +52,11 @@ select:focus,input:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 
 .detail{font-size:12px;line-height:1.5;color:#52665a;margin-top:9px}
 .maps{display:flex;justify-content:center;align-items:center;gap:8px;width:100%;text-decoration:none;background:linear-gradient(135deg,#0b0b0a,#3b2e1a);color:white;border:1px solid var(--gold);border-radius:11px;padding:13px 12px;margin-top:13px;font-weight:800;font-size:13px}
 .maps:hover{background:#3f3422}
+.nav-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:13px}
+.nav-buttons .maps{margin-top:0}
+.maps.waze{background:#087e9b;border-color:#087e9b}
+.maps.waze:hover{background:#06657c}
+@media(max-width:430px){.nav-buttons{grid-template-columns:1fr}}
 .maps.disabled{background:#e7e1d5;color:#756d60;border-color:#c9bda5;cursor:not-allowed;pointer-events:none;opacity:.95}
 .confirm-overlay{position:fixed;inset:0;background:rgba(17,16,14,.62);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999}
 .confirm-overlay.hidden{display:none!important}
@@ -153,7 +158,10 @@ th{background:#f7f3ea}
         <span id="selectedMunicipio" class="badge"></span>
       </div>
       <div id="selectedDetails" class="detail"></div>
-      <button id="mapsButton" type="button" class="maps" onclick="confirmMaps()">⌖ Abrir localização no Google Maps</button>
+      <div class="nav-buttons">
+        <button id="mapsButton" type="button" class="maps" onclick="confirmMaps()">⌖ Abrir no Google Maps</button>
+        <button id="wazeButton" type="button" class="maps waze" onclick="openWaze()">Abrir no Waze</button>
+      </div>
     </div>
   </section>
 
@@ -226,25 +234,32 @@ function selectLocal(x){
   const coordinateText=valid ? esc(x.coordenada) : "SEM COORDENADA GEOGRÁFICA.";
   $("selectedDetails").innerHTML=`<b>Endereço:</b> ${esc(x.enderecoCompleto)}<br><b>Bairro:</b> ${esc(x.bairro)}<br><b>Zona:</b> ${esc(x.zona)} · <b>Código:</b> ${esc(x.codigoLocal)}<br><b>Coordenadas:</b> ${coordinateText}`;
   const maps=$("mapsButton");
-  if(valid){
-    maps.dataset.mapsUrl=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(x.latitude+","+x.longitude)}`;
-    maps.textContent="⌖ Abrir localização no Google Maps";
-    maps.classList.remove("disabled");
-    maps.removeAttribute("aria-disabled");
-    maps.removeAttribute("tabindex");
-  }else{
-    delete maps.dataset.mapsUrl;
-    maps.textContent="⌖ Sem coordenada geográfica";
-    maps.classList.add("disabled");
-    maps.setAttribute("aria-disabled","true");
-    maps.setAttribute("tabindex","-1");
-  }
+  const waze=$("wazeButton");
+  // Use coordenadas quando disponíveis; caso contrário, pesquise pelo nome e endereço.
+  const destino = valid ? x.latitude+","+x.longitude : [x.nomeLocal, x.enderecoCompleto].filter(Boolean).join(", ");
+  waze.textContent = valid ? "Abrir no Waze" : "Buscar endereço no Waze";
+  waze.dataset.wazeUrl = valid
+    ? `https://waze.com/ul?ll=${encodeURIComponent(destino)}&navigate=yes`
+    : `https://waze.com/ul?q=${encodeURIComponent(destino)}&navigate=yes`;
+  waze.classList.remove("disabled");
+  waze.removeAttribute("aria-disabled");
+  waze.removeAttribute("tabindex");
+  maps.dataset.mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(destino)}`;
+  maps.textContent = valid ? "⌖ Abrir localização no Google Maps" : "⌖ Buscar endereço no Google Maps";
+  maps.classList.remove("disabled");
+  maps.removeAttribute("aria-disabled");
+  maps.removeAttribute("tabindex");
   $("selectedPanel").scrollIntoView({behavior:"smooth",block:"start"});
 }
 function confirmMaps(){
   const maps=$("mapsButton");
   if(!maps.dataset.mapsUrl || maps.classList.contains("disabled")) return;
   $("confirmOverlay").classList.remove("hidden");
+}
+function openWaze(){
+  const waze=$("wazeButton");
+  if(!waze.dataset.wazeUrl || waze.classList.contains("disabled")) return;
+  window.open(waze.dataset.wazeUrl,"_blank","noopener,noreferrer");
 }
 function closeConfirmMaps(){
   $("confirmOverlay").classList.add("hidden");
